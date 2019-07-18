@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:47:57 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/17 14:14:34 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/17 21:29:08 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,19 +69,119 @@ void log_receive(int afd, char *msg)
 	server_log(buf);
 }
 
+int server_listen_eph(void)
+{
+	int sfd;
+	if ((sfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+	{
+		server_log("Error: Create Socket\n");
+		return (-1);
+	}
+	if (listen(sfd, 0) == -1)
+	{
+		server_log("Error: Listen");
+		return (-1);
+	}
+	return (sfd);
+}
+
+int transmit_addr(int lfd, int afd)
+{
+	struct sockaddr addr;
+	socklen_t addr_len;
+
+	addr_len = sizeof(addr);
+	ft_memset(&addr, 0, sizeof(addr));
+	if (getsockname(lfd, &addr, &addr_len) == -1)
+		return (-1);
+	send(afd, &addr_len, sizeof(addr_len), 0);
+	server_log("Sent sock_len info");
+	send(afd, &addr, addr_len, 0);
+	server_log("Sent sock_addr info");
+	return (0);
+}
+
+void exec_to_socket(int dfd, char *cmd, char **av)
+{
+	int pid;
+
+	pid = fork();
+	if (!pid)
+	{
+		dup2(dfd, STDOUT_FILENO);
+		dup2(dfd, STDERR_FILENO);
+		if (execvp(cmd, av) == -1)
+			err_exit("exec");
+	}
+	wait4(pid, NULL, 0, NULL);
+}
+
+int establish_data_sock(int afd)
+{
+	int lfd;
+	int dfd;
+
+
+	if ((lfd = server_listen_eph()) == -1)
+		return (-1);
+	transmit_addr(lfd, afd);
+	dfd = accept(lfd, NULL, 0);
+	close(lfd);
+	return (dfd);
+}
+
+void handle_ls(int afd, char **av)
+{
+	int dfd;
+
+	(void)av;
+	dfd = establish_data_sock(afd);
+	server_log("Opened data connection");
+	exec_to_socket(dfd, "ls", (char*[]){"ls", "-l", NULL});
+	close(dfd);
+	server_log("Success, closed data connection");
+}
+
+// void handle_pwd(int afd, char **av)
+// {
+
+// }
+
+void handle_cmd(int afd, char *str)
+{
+	char **cmd;
+	int i;
+	static void(*jump[])(int, char **) = {
+		&handle_ls
+	};
+
+	i = 0;
+	cmd = ft_strsplit(str, ':');
+	while (i < NUM_CMD_CODE)
+	{
+		if (!ft_strcmp(cmd[0], g_cmd_code[i]))
+			jump[i](afd, cmd + 1);
+		i++;
+	}
+	free_str_split(cmd);
+}
+
 void *handle_connection(void *in)
 {
 	char buf[MAX_TN_LEN];
 	char *end;
 	t_thread_args args;
+	char cwd[1024];
 
 	ft_memcpy(&args, in, sizeof(t_thread_args));
+	ft_strcpy(cwd, "/");
 	while (recv(args.afd, buf, MAX_TN_LEN, 0))
 	{
 		if ((end = ft_strchr(buf, '\n')))
 			*end = '\0';
 		log_receive(args.afd, buf);
 		send_ack(args.afd);
+		handle_cmd(args.afd, buf);
 	}
 	close(args.afd);
 	return (NULL);
@@ -105,10 +205,10 @@ int main(int ac, char **av)
 	struct sockaddr faddr;
 	socklen_t fadd_len;
 
-
 	if (ac != 2)
 		usage();
 	sfd = init_server(av[1]);
+	g_server_root = ft_strdup(getenv("PWD"));
 	while ((afd = accept(sfd, &faddr, &fadd_len)))
 	{
 		server_log("Connection created!");

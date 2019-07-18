@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:47:04 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/17 12:55:21 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/17 21:49:01 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,17 +40,46 @@ int client_connect(char *addr_str, char *port_str)
 	return (sfd);
 }
 
-
-int prompt(void)
+bool prompt(void)
 {
 	PRINT(PROMPT);
 	return (true);
 }
 
+int connect_to_data_sock(int sfd)
+{
+	socklen_t addr_len;
+	struct sockaddr addr;
+	int dfd;
+
+	ft_memset(&addr, 0, sizeof(addr));
+	recv(sfd, &addr_len, sizeof(addr_len), 0);
+	printf("addr: %u\n", addr_len);
+	recv(sfd, &addr, addr_len, 0);
+	printf("addr: %u\n", addr.sa_family);
+	if((dfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+		err_exit("socket");
+	if (connect(dfd, &addr, addr_len) == -1)
+		err_exit("could not connect");
+	printf("connection established\n");
+	return (dfd);
+}
+
 void handle_ls(int sfd, char **av)
 {
+	int dfd;
+	char buf[1000];
+	size_t len;
+
 	printf("ls: %s\n", av[0]);
-	send_code(sfd, LIST, "Hello!");
+	if (send_code(sfd, LIST, NULL) == -1)
+	{
+		printf("Error: expected ACK\n");
+		return;
+	}
+	dfd = connect_to_data_sock(sfd);
+	while((len = recv(dfd, buf, sizeof(buf), 0)))
+		write(1, buf, len);
 }
 
 void handle_cd(int sfd, char **av)

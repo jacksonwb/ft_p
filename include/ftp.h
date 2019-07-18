@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 19:38:50 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/16 17:07:57 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/17 19:19:37 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@
 #include <stdlib.h>
 
 void		err_exit(char *str);
-void		send_code(int sfd, int code, char *msg);
+int			send_code(int sfd, int code, char *msg);
 void		send_ack(int sfd);
 
 #endif
