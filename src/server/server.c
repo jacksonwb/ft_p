@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:47:57 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/17 21:29:08 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/18 21:39:55 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -121,7 +121,6 @@ int establish_data_sock(int afd)
 	int lfd;
 	int dfd;
 
-
 	if ((lfd = server_listen_eph()) == -1)
 		return (-1);
 	transmit_addr(lfd, afd);
@@ -130,29 +129,149 @@ int establish_data_sock(int afd)
 	return (dfd);
 }
 
-void handle_ls(int afd, char **av)
+void handle_ls(int afd, char **av, char *cwd)
+{
+	int dfd;
+	char buf[SERVER_BUFF_SIZE];
+
+	(void)av;
+	(void)cwd;
+	dfd = establish_data_sock(afd);
+	server_log("Opened data connection");
+	if (!ft_strcmp(cwd, "/"))
+		exec_to_socket(dfd, "ls", (char*[]){"ls", "-l", NULL});
+	else
+	{
+		ft_strcpy(buf, g_server_root);
+		ft_strlcat(buf, cwd, SERVER_BUFF_SIZE);
+		printf("buf: %s\n", buf);
+		exec_to_socket(dfd, "ls", (char*[]){"ls", "-l", buf, NULL});
+	}
+	close(dfd);
+	server_log("Success, closed data connection");
+}
+
+void handle_pwd(int afd, char **av, char *cwd)
 {
 	int dfd;
 
 	(void)av;
 	dfd = establish_data_sock(afd);
 	server_log("Opened data connection");
-	exec_to_socket(dfd, "ls", (char*[]){"ls", "-l", NULL});
+	write(dfd, cwd, ft_strlen(cwd));
 	close(dfd);
 	server_log("Success, closed data connection");
 }
 
-// void handle_pwd(int afd, char **av)
-// {
+int is_valid_directory(char *cwd, char *path)
+{
+	struct stat file;
+	char buf[2048];
 
-// }
+	ft_strncpy(buf, g_server_root, sizeof(buf));
+	ft_strlcat(buf, cwd, sizeof(buf));
+	ft_strlcat(buf, "/", sizeof(buf));
+	ft_strlcat(buf, path, sizeof(buf));
+	if (lstat(buf, &file) == -1)
+		return (0);
+	if (S_ISDIR(file.st_mode))
+		return (1);
+	return (0);
+}
 
-void handle_cmd(int afd, char *str)
+void handle_cd(int afd, char **av, char *cwd)
+{
+	int dfd;
+
+	dfd = establish_data_sock(afd);
+	if (!av || !av[0])
+		PRINTFD("Error: no argument\n", dfd);
+	else if (ft_strchr(av[0], '/'))
+		PRINTFD("Error: filename cannot contain a '/' character\n", dfd);
+	else if (!ft_strcmp(av[0], ".."))
+	{
+		if (!ft_strcmp(cwd, "/"))
+			PRINTFD("Error: already in root!\n", dfd);
+		else
+		{
+			*ft_strrchr(cwd, '/') = 0;
+			if (!*cwd)
+				ft_strlcat(cwd, "/", SERVER_BUFF_SIZE);
+		}
+	}
+	else if (is_valid_directory(cwd, av[0]))
+	{
+		if (ft_strcmp(cwd, "/"))
+			ft_strlcat(cwd, "/", SERVER_BUFF_SIZE);
+		ft_strlcat(cwd, av[0], SERVER_BUFF_SIZE);
+	}
+	else
+		PRINTFD("Error: not a valid directory\n", dfd);
+	close (dfd);
+}
+
+int is_gettable_file(char *cwd, char *path, char *fbuf)
+{
+	struct stat file;
+
+	if (!path)
+		return (0);
+	ft_strcpy(fbuf, g_server_root);
+	ft_strlcat(fbuf, cwd, SERVER_BUFF_SIZE);
+	ft_strlcat(fbuf, "/", SERVER_BUFF_SIZE);
+	ft_strlcat(fbuf, path, SERVER_BUFF_SIZE);
+	if (lstat(fbuf, &file) == -1)
+		return (0);
+	if (S_ISREG(file.st_mode) && access(fbuf, R_OK))
+		return (1);
+	return (0);
+}
+
+void send_file_to_client(char *path, int dfd)
+{
+	uint8_t buf[FILE_BUFF_SIZE];
+	size_t size;
+
+	//open path and use that to send
+	while ((size = read(ffd, buf, FILE_BUFF_SIZE)))
+		send(dfd, buf, size, 0);
+}
+
+void handle_get(int afd, char **av, char *cwd)
+{
+	int dfd;
+	char buf[MAX_TN_LEN];
+	char fbuf[SERVER_BUFF_SIZE];
+	char  **msg;
+
+	recv(afd, buf, MAX_TN_LEN, 0);
+	msg = ft_strsplit(buf, ':');
+	if (msg && *msg && ft_strcmp(msg[0], g_com_str[IS_FILE]))
+	{
+		server_log("Invalid get code\n");
+		return;
+	}
+	if (!is_gettable_file(cwd, msg[1], fbuf))
+	{
+		send_bad(afd);
+		return;
+	}
+	send_ack(afd);
+	dfd = establish_data_sock(afd);
+	//finish sending here
+	//add confirmation checkingt
+
+}
+
+void handle_cmd(int afd, char *str, char *cwd)
 {
 	char **cmd;
 	int i;
-	static void(*jump[])(int, char **) = {
-		&handle_ls
+	static void(*jump[])(int, char **, char *) = {
+		&handle_ls,
+		&handle_pwd,
+		&handle_cd,
+		&handle_get
 	};
 
 	i = 0;
@@ -160,7 +279,7 @@ void handle_cmd(int afd, char *str)
 	while (i < NUM_CMD_CODE)
 	{
 		if (!ft_strcmp(cmd[0], g_cmd_code[i]))
-			jump[i](afd, cmd + 1);
+			jump[i](afd, cmd + 1, cwd);
 		i++;
 	}
 	free_str_split(cmd);
@@ -171,9 +290,10 @@ void *handle_connection(void *in)
 	char buf[MAX_TN_LEN];
 	char *end;
 	t_thread_args args;
-	char cwd[1024];
+	char cwd[SERVER_BUFF_SIZE];
 
 	ft_memcpy(&args, in, sizeof(t_thread_args));
+	ft_memset(cwd, '\0', sizeof(cwd));
 	ft_strcpy(cwd, "/");
 	while (recv(args.afd, buf, MAX_TN_LEN, 0))
 	{
@@ -181,9 +301,10 @@ void *handle_connection(void *in)
 			*end = '\0';
 		log_receive(args.afd, buf);
 		send_ack(args.afd);
-		handle_cmd(args.afd, buf);
+		handle_cmd(args.afd, buf, cwd);
 	}
 	close(args.afd);
+	server_log("Connection closed!");
 	return (NULL);
 }
 
@@ -211,7 +332,7 @@ int main(int ac, char **av)
 	g_server_root = ft_strdup(getenv("PWD"));
 	while ((afd = accept(sfd, &faddr, &fadd_len)))
 	{
-		server_log("Connection created!");
+		server_log("Connection opened!");
 		launch_thread(afd);
 	}
 	return (0);

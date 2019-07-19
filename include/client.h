@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:53:48 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/16 20:14:45 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/18 20:56:31 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <stdbool.h>
+#include <fcntl.h>
 #include "libft.h"
 #include "get_next_line.h"
 #include "com_string.h"

@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/16 15:51:04 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/16 17:00:01 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/18 21:05:03 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,9 +14,15 @@
 # define COM_STRING_H
 
 # define MAX_TN_LEN 200
+
 # define LIST 0
 # define CWD 1
 # define ACK 2
+# define CD 3
+# define GET 4
+# define IS_FILE 5
+# define BAD 6
+# define FILE 7
 
 extern char *g_com_str[];
 
