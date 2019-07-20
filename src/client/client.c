@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
+/*   By: jackson <jbeall@student.42.us.org>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:47:04 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/20 13:46:43 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/20 14:07:04 by jackson          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,13 +97,15 @@ void write_progress(size_t sent, size_t total)
 {
 	float ratio;
 	float percent;
-	char buf[30];
+	char buf[51];
 	int i;
 
-	percent = sent / total * 100;
-	ft_memset(buf, '-', sizeof(buf));
+	ratio = (float)sent / (float)total;
+	percent = ratio * 100;
+	ft_memset(buf, ' ', sizeof(buf));
+	buf[sizeof(buf) - 1] = '\0';
 	i = 0;
-	while (i < percent * 30)
+	while (i < ratio * sizeof(buf) - 2)
 	{
 		buf[i] = '=';
 		i++;
@@ -114,11 +116,7 @@ void write_progress(size_t sent, size_t total)
 
 void clear_progress(void)
 {
-	char buf[30];
-
-	ft_memset(buf, ' ', sizeof(buf));
-	printf("\r%s\r", buf);
-	fflush(stdout);
+	printf("\n");
 }
 
 size_t send_data_for_request(int sfd, int cmd, char *msg, int infd, size_t file_size)
@@ -141,7 +139,8 @@ size_t send_data_for_request(int sfd, int cmd, char *msg, int infd, size_t file_
 		if (file_size)
 			write_progress(total, file_size);
 	}
-	clear_progress();
+	if (file_size)
+		clear_progress();
 	close(dfd);
 	return (total);
 }
