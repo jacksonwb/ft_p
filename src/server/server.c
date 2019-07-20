@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:47:57 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/20 12:24:29 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/20 12:32:35 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,7 +94,6 @@ int transmit_addr(int lfd, int afd)
 	ft_memset(&addr, 0, sizeof(addr));
 	if (getsockname(lfd, (struct sockaddr*)(&addr), &addr_len) == -1)
 		return (-1);
-	printf("family: %u, port: %u, address: %u\n", addr.sin_family, addr.sin_port, addr.sin_addr.s_addr);
 	send(afd, &(addr.sin_port), sizeof(addr.sin_port), 0);
 	server_log("Sent sock_addr info");
 	return (0);
@@ -136,18 +135,15 @@ void handle_ls(int afd, char **av, char *cwd)
 	(void)av;
 	(void)cwd;
 	dfd = establish_data_sock(afd);
-	server_log("Opened data connection");
 	if (!ft_strcmp(cwd, "/"))
 		exec_to_socket(dfd, "ls", (char*[]){"ls", "-l", NULL});
 	else
 	{
 		ft_strcpy(buf, g_server_root);
 		ft_strlcat(buf, cwd, SERVER_BUFF_SIZE);
-		printf("buf: %s\n", buf);
 		exec_to_socket(dfd, "ls", (char*[]){"ls", "-l", buf, NULL});
 	}
 	close(dfd);
-	server_log("Success, closed data connection");
 }
 
 void handle_pwd(int afd, char **av, char *cwd)
@@ -156,10 +152,8 @@ void handle_pwd(int afd, char **av, char *cwd)
 
 	(void)av;
 	dfd = establish_data_sock(afd);
-	server_log("Opened data connection");
 	write(dfd, cwd, ft_strlen(cwd));
 	close(dfd);
-	server_log("Success, closed data connection");
 }
 
 int is_valid_directory(char *cwd, char *path)

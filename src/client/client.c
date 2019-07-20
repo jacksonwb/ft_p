@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:47:04 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/20 12:25:12 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/20 12:55:35 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,6 @@ int connect_to_data_sock(int sfd)
 	if (getpeername(sfd, (struct sockaddr*)(&peer), &peer_len) == -1)
 		return (-1);
 	addr.sin_addr.s_addr = peer.sin_addr.s_addr;
-	printf("family: %u, port: %u, address: %u\n", addr.sin_family, addr.sin_port, addr.sin_addr.s_addr);
 	if((dfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 		err_exit("socket");
 	if (connect(dfd, (struct sockaddr*)(&addr), addr_len) == -1)
@@ -71,45 +70,49 @@ int connect_to_data_sock(int sfd)
 	return (dfd);
 }
 
-void read_data_from_request(int sfd, int cmd, char *msg, int outfd)
+size_t read_data_from_request(int sfd, int cmd, char *msg, int outfd)
 {
 	int dfd;
 	uint8_t buf[1000];
 	size_t len;
+	size_t total;
 
 	if (send_code(sfd, cmd, msg) == -1)
 	{
 		printf("Error: expected ACK\n");
-		return;
+		return (0);
 	}
 	dfd = connect_to_data_sock(sfd);
+	total = 0;
 	while((len = recv(dfd, buf, sizeof(buf), 0)))
 	{
-		printf("Received %zu bytes\n", len);
+		total += len;
 		write(outfd, buf, len);
-
 	}
 	close(dfd);
+	return (total);
 }
 
-void send_data_for_request(int sfd, int cmd, char *msg, int infd)
+size_t send_data_for_request(int sfd, int cmd, char *msg, int infd)
 {
 	int dfd;
 	uint8_t buf[1000];
 	size_t len;
+	size_t total;
 
 	if (send_code(sfd, cmd, msg) == -1)
 	{
 		printf("Error: expected ACK\n");
-		return;
+		return (0);
 	}
 	dfd = connect_to_data_sock(sfd);
+	total = 0;
 	while((len = read(infd, buf, sizeof(buf))))
 	{
-		printf("Sent %zu bytes\n", len);
-		send(dfd, buf, len, 0);
+		total += send(dfd, buf, len, 0);
 	}
 	close(dfd);
+	return (total);
 }
 
 void handle_ls(int sfd, char **av)
@@ -139,6 +142,7 @@ void handle_get(int sfd, char **av)
 {
 	int newfd;
 	char buf[MAX_TN_LEN];
+	size_t total;
 
 	if (!av || !av[0] || !*av[0])
 		return;
@@ -152,7 +156,6 @@ void handle_get(int sfd, char **av)
 		printf("Error: expected ACK\n");
 		return;
 	}
-
 	ft_memset(buf, 0, sizeof(buf));
 	if (recv(sfd, buf, ft_strlen(g_com_str[ACK]), 0) == 0)
 		die("Error: socket was closed");
@@ -163,13 +166,15 @@ void handle_get(int sfd, char **av)
 	}
 
 	newfd = open(av[0], O_WRONLY | O_CREAT | O_TRUNC, 0666);
-	read_data_from_request(sfd, SFILE, av[0], newfd);
+	total = read_data_from_request(sfd, SFILE, av[0], newfd);
+	printf("Received %zu bytes in file: %s\n", total, av[0]);
 	close (newfd);
 }
 
 void handle_put(int sfd, char **av)
 {
 	int filefd;
+	size_t total;
 
 	if (!av || !av[0] || !*av[0])
 		return;
@@ -188,7 +193,9 @@ void handle_put(int sfd, char **av)
 		printf("Error: expected ACK\n");
 		return;
 	}
-	send_data_for_request(sfd, TFILE, av[0], filefd);
+	total = 0;
+	total = send_data_for_request(sfd, TFILE, av[0], filefd);
+	printf("Sent %zu bytes in file: %s\n", total, av[0]);
 	close(filefd);
 }
 
