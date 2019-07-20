@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:47:04 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/20 12:14:48 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/20 12:25:12 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,12 +59,10 @@ int connect_to_data_sock(int sfd)
 	peer_len = sizeof(peer);
 	ft_memset(&addr, 0, sizeof(addr));
 	addr.sin_family = PF_INET;
-	recv(sfd, &(addr.sin_addr.s_addr), sizeof(addr.sin_addr.s_addr), 0);
 	recv(sfd, &(addr.sin_port), sizeof(addr.sin_port), 0);
 	if (getpeername(sfd, (struct sockaddr*)(&peer), &peer_len) == -1)
 		return (-1);
 	addr.sin_addr.s_addr = peer.sin_addr.s_addr;
-	//getpeeraddress
 	printf("family: %u, port: %u, address: %u\n", addr.sin_family, addr.sin_port, addr.sin_addr.s_addr);
 	if((dfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 		err_exit("socket");
