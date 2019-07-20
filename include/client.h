@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:53:48 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/18 20:56:31 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/19 17:26:12 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 # define CLIENT_H
 
 #include <sys/socket.h>
+#include <sys/param.h>
 #include <netdb.h>
 #include <stdbool.h>
 #include <fcntl.h>
@@ -22,17 +23,21 @@
 #include "com_string.h"
 
 
-#define PROMPT "(client)> "
+# define PROMPT "(client)"
+# define PURPLE "\x1b[38;5;135m"
+# define RESET "\x1b[0m"
 
-#define NUM_CMDS 6
-
+#define NUM_CMDS 9
 char* g_cmd_str[] = {
 	"ls",
 	"cd",
 	"get",
 	"put",
 	"pwd",
-	"quit"
+	"quit",
+	"lls",
+	"lcd",
+	"lpwd"
 };
 
 #endif

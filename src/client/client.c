@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:47:04 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/18 21:20:48 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/19 20:19:54 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,12 +36,14 @@ int client_connect(char *addr_str, char *port_str)
 		err_exit("Bad Address");
 	if (connect(sfd, addr->ai_addr, addr->ai_addrlen) == -1)
 		err_exit("Connect");
+	freeaddrinfo(addr);
 	return (sfd);
 }
 
 bool prompt(void)
 {
-	PRINT(PROMPT);
+	printf(PURPLE PROMPT RESET " > ");
+	fflush(stdout);
 	return (true);
 }
 
@@ -64,7 +66,7 @@ int connect_to_data_sock(int sfd)
 void read_data_from_request(int sfd, int cmd, char *msg, int outfd)
 {
 	int dfd;
-	char buf[1000];
+	uint8_t buf[1000];
 	size_t len;
 
 	if (send_code(sfd, cmd, msg) == -1)
@@ -74,7 +76,31 @@ void read_data_from_request(int sfd, int cmd, char *msg, int outfd)
 	}
 	dfd = connect_to_data_sock(sfd);
 	while((len = recv(dfd, buf, sizeof(buf), 0)))
+	{
+		printf("Received %zu bytes\n", len);
 		write(outfd, buf, len);
+
+	}
+	close(dfd);
+}
+
+void send_data_for_request(int sfd, int cmd, char *msg, int infd)
+{
+	int dfd;
+	uint8_t buf[1000];
+	size_t len;
+
+	if (send_code(sfd, cmd, msg) == -1)
+	{
+		printf("Error: expected ACK\n");
+		return;
+	}
+	dfd = connect_to_data_sock(sfd);
+	while((len = read(infd, buf, sizeof(buf))))
+	{
+		printf("Sent %zu bytes\n", len);
+		send(dfd, buf, len, 0);
+	}
 	close(dfd);
 }
 
@@ -104,27 +130,58 @@ void handle_cd(int sfd, char **av)
 void handle_get(int sfd, char **av)
 {
 	int newfd;
+	char buf[MAX_TN_LEN];
 
+	if (!av || !av[0] || !*av[0])
+		return;
 	if (ft_strchr(av[0], '/'))
 	{
 		printf("get : filename cannot contain '/' character\n");
 		return;
 	}
-	if (send_code(sfd, IS_FILE, av[0]) == -1)
+	if (send_code(sfd, GET, av[0]) == -1)
+	{
+		printf("Error: expected ACK\n");
+		return;
+	}
+
+	ft_memset(buf, 0, sizeof(buf));
+	if (recv(sfd, buf, ft_strlen(g_com_str[ACK]), 0) == 0)
+		die("Error: socket was closed");
+	if (ft_strncmp(buf, g_com_str[ACK], ft_strlen(g_com_str[ACK])))
 	{
 		printf("Error: file does not exist or is invalid\n");
 		return;
 	}
-	newfd = open(av[0], O_RDWR | O_CREAT | O_TRUNC);
-	read_data_from_request(sfd, FILE, av[0], newfd);
+
+	newfd = open(av[0], O_WRONLY | O_CREAT | O_TRUNC, 0666);
+	read_data_from_request(sfd, SFILE, av[0], newfd);
 	close (newfd);
 }
 
 void handle_put(int sfd, char **av)
 {
-	printf("put: %s\n", av[0]);
+	int filefd;
 
-	(void)sfd;
+	if (!av || !av[0] || !*av[0])
+		return;
+	if (ft_strchr(av[0], '/'))
+	{
+		printf("put : filename cannot contain '/' character\n");
+		return;
+	}
+	if ((filefd = open(av[0], O_RDONLY)) == -1)
+	{
+		perror("put");
+		return;
+	}
+	if (send_code(sfd, PUT, av[0]) == -1)
+	{
+		printf("Error: expected ACK\n");
+		return;
+	}
+	send_data_for_request(sfd, TFILE, av[0], filefd);
+	close(filefd);
 }
 
 void handle_quit(int sfd, char **av)
@@ -132,6 +189,40 @@ void handle_quit(int sfd, char **av)
 	(void)av;
 	(void)sfd;
 	exit(EXIT_SUCCESS);
+}
+
+void handle_lls(int sfd, char **av)
+{
+	int pid;
+
+	(void)sfd;
+	pid = fork();
+	if (!pid)
+	{
+		if (execvp("ls", (char*[]){"ls", "-l", av[0], NULL}) == -1)
+			err_exit("lls");
+	}
+	wait4(pid, NULL, 0, NULL);
+}
+
+void handle_lcd(int sfd, char **av)
+{
+	(void)sfd;
+	char buf[MAXPATHLEN];
+
+	if (chdir(av[0]) == -1)
+		perror("lcd");
+	setenv("OLDPWD", getenv("PWD"), 1);
+	setenv("PWD", getcwd(buf, MAXPATHLEN), 1);
+}
+
+void handle_lpwd(int sfd, char **av)
+{
+	(void)sfd;
+	(void)av;
+	char buf[MAXPATHLEN];
+
+	printf("%s\n", getcwd(buf, MAXPATHLEN));
 }
 
 void handle_cmd(int sfd, char *str)
@@ -144,7 +235,10 @@ void handle_cmd(int sfd, char *str)
 		&handle_get,
 		&handle_put,
 		&handle_pwd,
-		&handle_quit
+		&handle_quit,
+		&handle_lls,
+		&handle_lcd,
+		&handle_lpwd
 	};
 
 	i = 0;

@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/16 15:51:04 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/18 21:05:03 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/19 14:08:14 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,9 @@
 # define GET 4
 # define IS_FILE 5
 # define BAD 6
-# define FILE 7
+# define SFILE 7
+# define PUT 8
+# define TFILE 9
 
 extern char *g_com_str[];
 

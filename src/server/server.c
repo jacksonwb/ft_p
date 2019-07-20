@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:47:57 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/18 21:39:55 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/19 16:53:09 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -218,23 +218,59 @@ int is_gettable_file(char *cwd, char *path, char *fbuf)
 		return (0);
 	ft_strcpy(fbuf, g_server_root);
 	ft_strlcat(fbuf, cwd, SERVER_BUFF_SIZE);
-	ft_strlcat(fbuf, "/", SERVER_BUFF_SIZE);
+	if (ft_strcmp(cwd, "/"))
+		ft_strlcat(fbuf, "/", SERVER_BUFF_SIZE);
 	ft_strlcat(fbuf, path, SERVER_BUFF_SIZE);
 	if (lstat(fbuf, &file) == -1)
 		return (0);
-	if (S_ISREG(file.st_mode) && access(fbuf, R_OK))
+	if (S_ISREG(file.st_mode) && !access(fbuf, R_OK))
 		return (1);
+	printf("lstat succesful, check is bad\n");
 	return (0);
 }
 
-void send_file_to_client(char *path, int dfd)
+void send_file_to_client(char *cwd, char *path, int dfd)
 {
 	uint8_t buf[FILE_BUFF_SIZE];
+	char namebuf[SERVER_BUFF_SIZE];
 	size_t size;
+	size_t total;
+	int ffd;
 
-	//open path and use that to send
+	ft_strcpy(namebuf, g_server_root);
+	ft_strlcat(namebuf, cwd, SERVER_BUFF_SIZE);
+	if (ft_strcmp(cwd, "/"))
+		ft_strlcat(namebuf, "/", SERVER_BUFF_SIZE);
+	ft_strlcat(namebuf, path, SERVER_BUFF_SIZE);
+	total = 0;
+	if((ffd = open(namebuf, O_RDONLY)) == -1)
+		return;
 	while ((size = read(ffd, buf, FILE_BUFF_SIZE)))
-		send(dfd, buf, size, 0);
+		total += send(dfd, buf, size, 0);
+	printf("Sent %zu bytes in file: %s\n", total, path);
+	close(ffd);
+}
+
+void rec_file_from_client(char *cwd, char *path, int dfd)
+{
+	uint8_t buf[FILE_BUFF_SIZE];
+	char namebuf[SERVER_BUFF_SIZE];
+	size_t size;
+	size_t total;
+	int ffd;
+
+	ft_strcpy(namebuf, g_server_root);
+	ft_strlcat(namebuf, cwd, SERVER_BUFF_SIZE);
+	if (ft_strcmp(cwd, "/"))
+		ft_strlcat(namebuf, "/", SERVER_BUFF_SIZE);
+	ft_strlcat(namebuf, path, SERVER_BUFF_SIZE);
+	total = 0;
+	if ((ffd = open(namebuf, O_WRONLY | O_CREAT | O_TRUNC, 0666)) == -1)
+		return;
+	while ((size = recv(dfd, buf, FILE_BUFF_SIZE, 0)))
+		total += write(ffd, buf, size);
+	printf("Recieved %zu bytes in file: %s\n", total, path);
+	close(ffd);
 }
 
 void handle_get(int afd, char **av, char *cwd)
@@ -244,23 +280,48 @@ void handle_get(int afd, char **av, char *cwd)
 	char fbuf[SERVER_BUFF_SIZE];
 	char  **msg;
 
-	recv(afd, buf, MAX_TN_LEN, 0);
-	msg = ft_strsplit(buf, ':');
-	if (msg && *msg && ft_strcmp(msg[0], g_com_str[IS_FILE]))
-	{
-		server_log("Invalid get code\n");
-		return;
-	}
-	if (!is_gettable_file(cwd, msg[1], fbuf))
+	if (!is_gettable_file(cwd, av[0], fbuf))
 	{
 		send_bad(afd);
 		return;
 	}
 	send_ack(afd);
+	recv(afd, buf, MAX_TN_LEN, 0);
+	msg = ft_strsplit(buf, ':');
+	if (msg && *msg && ft_strcmp(msg[0], g_com_str[SFILE]))
+	{
+		server_log("Invalid get code\n");
+		send_bad(afd);
+		return;
+	}
+	send_ack(afd);
 	dfd = establish_data_sock(afd);
-	//finish sending here
-	//add confirmation checkingt
+	send_file_to_client(cwd, av[0], dfd);
+	close(dfd);
+	server_log("Succesfully sent file");
+	free_str_split(msg);
+}
 
+void handle_put(int afd, char **av, char  *cwd)
+{
+	int dfd;
+	char buf[MAX_TN_LEN];
+	char **msg;
+
+	recv(afd, buf, MAX_TN_LEN, 0);
+	msg = ft_strsplit(buf, ':');
+	if (msg && *msg && ft_strcmp(msg[0], g_com_str[TFILE]))
+	{
+		server_log("Invalid get code\n");
+		send_bad(afd);
+		return;
+	}
+	send_ack(afd);
+	dfd = establish_data_sock(afd);
+	rec_file_from_client(cwd, av[0], dfd);
+	server_log("Successfully received file");
+	free_str_split(msg);
+	close(dfd);
 }
 
 void handle_cmd(int afd, char *str, char *cwd)
@@ -271,7 +332,8 @@ void handle_cmd(int afd, char *str, char *cwd)
 		&handle_ls,
 		&handle_pwd,
 		&handle_cd,
-		&handle_get
+		&handle_get,
+		&handle_put
 	};
 
 	i = 0;

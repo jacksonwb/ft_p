@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:51:32 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/18 21:14:46 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/19 16:32:01 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <netdb.h>
 #include <stdio.h>
 #include <pthread.h>
@@ -29,13 +30,14 @@
 # define SERVER_BUFF_SIZE 1024
 # define FILE_BUFF_SIZE 10000
 
-# define NUM_CMD_CODE 3
+# define NUM_CMD_CODE 5
 
 char* g_cmd_code[] = {
 	"LIST",
 	"CWD",
 	"CD",
-	"GET"
+	"GET",
+	"PUT"
 };
 
 typedef struct s_thread_args

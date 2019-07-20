@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/10/22 17:40:25 by jbeall            #+#    #+#             */
-/*   Updated: 2018/12/12 19:26:21 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/18 15:29:04 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,9 @@
 # include <unistd.h>
 # include <string.h>
 # include <stdlib.h>
+
+# define PRINT(x) write(1, x, sizeof(x))
+# define PRINTFD(x, fd) write(fd, x, sizeof(x))
 
 typedef struct		s_list
 {
@@ -69,6 +72,7 @@ char				*ft_strjoin(const char *s1, const char *s2);
 char				*ft_strnjoin(const char *s1, const char *s2, size_t n);
 char				*ft_strtrim(char const *s);
 char				**ft_strsplit(char const *s, char c);
+void				free_str_split(char **str_arr);
 char				*ft_itoa(int n);
 void				ft_putchar(char c);
 void				ft_putstr(char const *str);

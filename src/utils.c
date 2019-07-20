@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 21:00:15 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/18 21:04:43 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/19 14:07:59 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,9 @@ char *g_com_str[] = {
 	"GET",
 	"IS_FILE",
 	"BAD",
-	"FILE"
+	"SFILE",
+	"PUT",
+	"TFILE"
 };
 
 void		err_exit(char *str)
