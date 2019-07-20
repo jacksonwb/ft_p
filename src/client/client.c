@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:47:04 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/20 14:29:21 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/20 14:38:12 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -201,7 +201,8 @@ void handle_get(int sfd, char **av)
 	}
 	newfd = open(av[0], O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	file_size = 0;
-	recv(sfd, &file_size, sizeof(file_size), 0);
+	if (recv(sfd, &file_size, sizeof(file_size), 0) == 0)
+		die("Error: socket was closed");
 	total = read_data_from_request(sfd, SFILE, av[0], newfd, file_size);
 	printf("Received %zu bytes in file: %s\n", total, av[0]);
 	close (newfd);

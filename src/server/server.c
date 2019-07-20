@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:47:57 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/20 14:28:20 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/20 14:42:00 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -292,6 +292,8 @@ void handle_get(int afd, char **av, char *cwd)
 		return;
 	}
 	send_ack(afd);
+	file_size = get_file_size_from_filename(av[0], cwd);
+	send(afd, &file_size, sizeof(file_size), 0);
 	recv(afd, buf, MAX_TN_LEN, 0);
 	msg = ft_strsplit(buf, ':');
 	if (msg && *msg && ft_strcmp(msg[0], g_com_str[SFILE]))
@@ -301,8 +303,6 @@ void handle_get(int afd, char **av, char *cwd)
 		return;
 	}
 	send_ack(afd);
-	file_size = get_file_size_from_filename(av[0], cwd);
-	send(afd, &file_size, sizeof(file_size), 0);
 	dfd = establish_data_sock(afd);
 	send_file_to_client(cwd, av[0], dfd);
 	close(dfd);
