@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:47:57 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/19 20:41:58 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/19 21:35:11 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,9 +94,10 @@ int transmit_addr(int lfd, int afd)
 	ft_memset(&addr, 0, sizeof(addr));
 	if (getsockname(lfd, (struct sockaddr*)(&addr), &addr_len) == -1)
 		return (-1);
-	send(afd, &addr_len, sizeof(addr_len), 0);
-	server_log("Sent sock_len info");
-	send(afd, &addr, addr_len, 0);
+	printf("family: %u, port: %u, address: %u\n", addr.sin_family, addr.sin_port, addr.sin_addr.s_addr);
+	send(afd, &(addr.sin_addr.s_addr), sizeof(addr.sin_addr.s_addr), 0);
+	server_log("Sent address info");
+	send(afd, &(addr.sin_port), sizeof(addr.sin_port), 0);
 	server_log("Sent sock_addr info");
 	return (0);
 }

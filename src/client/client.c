@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:47:04 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/19 20:58:06 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/19 21:45:49 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,9 +53,12 @@ int connect_to_data_sock(int sfd)
 	struct sockaddr_in addr;
 	int dfd;
 
+	addr_len = sizeof(addr);
 	ft_memset(&addr, 0, sizeof(addr));
-	recv(sfd, &addr_len, sizeof(addr_len), 0);
-	recv(sfd, &addr, addr_len, 0);
+	addr.sin_family = PF_INET;
+	recv(sfd, &(addr.sin_addr.s_addr), sizeof(addr.sin_addr.s_addr), 0);
+	recv(sfd, &(addr.sin_port), sizeof(addr.sin_port), 0);
+	addr.sin_addr.s_addr = inet_addr("10.113.1.1");
 	printf("family: %u, port: %u, address: %u\n", addr.sin_family, addr.sin_port, addr.sin_addr.s_addr);
 	if((dfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 		err_exit("socket");

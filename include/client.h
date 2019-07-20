@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:53:48 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/19 20:42:38 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/19 21:28:30 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <sys/socket.h>
 #include <sys/param.h>
 #include <sys/wait.h>
+#include <arpa/inet.h>
 #include <netdb.h>
 #include <stdbool.h>
 #include <fcntl.h>
