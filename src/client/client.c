@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:47:04 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/19 21:59:16 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/20 12:14:48 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,6 +56,7 @@ int connect_to_data_sock(int sfd)
 	int dfd;
 
 	addr_len = sizeof(addr);
+	peer_len = sizeof(peer);
 	ft_memset(&addr, 0, sizeof(addr));
 	addr.sin_family = PF_INET;
 	recv(sfd, &(addr.sin_addr.s_addr), sizeof(addr.sin_addr.s_addr), 0);
