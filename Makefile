@@ -6,7 +6,7 @@
 #    By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2019/03/03 12:06:08 by jbeall            #+#    #+#              #
-#    Updated: 2019/07/15 21:02:40 by jbeall           ###   ########.fr        #
+#    Updated: 2019/07/19 20:42:27 by jbeall           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,7 +16,7 @@ NAME1 = server
 NAME2 = client
 CC = clang
 CPPFLAGS = -Wall -Wextra -Werror -g
-LDFLAGS = -pipe -flto=full #-fsanitize=address,undefined
+LDFLAGS = -pipe -flto=full -lpthread #-fsanitize=address,undefined
 # OPT = -O3 -flto=full -march=native #-fsanitize=address,undefined
 SUB = libft
 

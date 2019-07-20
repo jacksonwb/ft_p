@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:47:57 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/19 16:53:09 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/19 20:41:58 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,12 +87,12 @@ int server_listen_eph(void)
 
 int transmit_addr(int lfd, int afd)
 {
-	struct sockaddr addr;
+	struct sockaddr_in addr;
 	socklen_t addr_len;
 
 	addr_len = sizeof(addr);
 	ft_memset(&addr, 0, sizeof(addr));
-	if (getsockname(lfd, &addr, &addr_len) == -1)
+	if (getsockname(lfd, (struct sockaddr*)(&addr), &addr_len) == -1)
 		return (-1);
 	send(afd, &addr_len, sizeof(addr_len), 0);
 	server_log("Sent sock_len info");
