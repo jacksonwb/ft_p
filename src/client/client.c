@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:47:04 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/20 12:55:35 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/20 13:39:47 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,7 +93,34 @@ size_t read_data_from_request(int sfd, int cmd, char *msg, int outfd)
 	return (total);
 }
 
-size_t send_data_for_request(int sfd, int cmd, char *msg, int infd)
+void write_progress(size_t sent, size_t total)
+{
+	float percent;
+	char buf[30];
+	int i;
+
+	percent = sent / total;
+	ft_memset(buf, '-', sizeof(buf));
+	i = 0;
+	while (i < percent * sizeof(buf))
+	{
+		buf[i] = '=';
+		i++;
+	}
+	printf("\rprogress [%s] %.0f%% ", buf, percent);
+	fflush(stdout);
+}
+
+void clear_progress(void)
+{
+	char buf[30];
+
+	ft_memset(buf, ' ', sizeof(buf));
+	printf("\r%s\r", buf);
+	fflush(stdout);
+}
+
+size_t send_data_for_request(int sfd, int cmd, char *msg, int infd, size_t file_size)
 {
 	int dfd;
 	uint8_t buf[1000];
@@ -110,7 +137,10 @@ size_t send_data_for_request(int sfd, int cmd, char *msg, int infd)
 	while((len = read(infd, buf, sizeof(buf))))
 	{
 		total += send(dfd, buf, len, 0);
+		if (file_size)
+			write_progress(total, file_size);
 	}
+	clear_progress();
 	close(dfd);
 	return (total);
 }
@@ -164,17 +194,26 @@ void handle_get(int sfd, char **av)
 		printf("Error: file does not exist or is invalid\n");
 		return;
 	}
-
 	newfd = open(av[0], O_WRONLY | O_CREAT | O_TRUNC, 0666);
 	total = read_data_from_request(sfd, SFILE, av[0], newfd);
 	printf("Received %zu bytes in file: %s\n", total, av[0]);
 	close (newfd);
 }
 
+size_t get_file_size(char *file)
+{
+	struct stat data;
+
+	if (stat(file, &data) == -1)
+		return (0);
+	return (data.st_size);
+}
+
 void handle_put(int sfd, char **av)
 {
 	int filefd;
 	size_t total;
+	size_t file_size;
 
 	if (!av || !av[0] || !*av[0])
 		return;
@@ -194,7 +233,8 @@ void handle_put(int sfd, char **av)
 		return;
 	}
 	total = 0;
-	total = send_data_for_request(sfd, TFILE, av[0], filefd);
+	file_size = get_file_size(av[0]);
+	total = send_data_for_request(sfd, TFILE, av[0], filefd, file_size);
 	printf("Sent %zu bytes in file: %s\n", total, av[0]);
 	close(filefd);
 }
