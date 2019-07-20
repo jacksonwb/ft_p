@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:47:04 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/20 13:39:47 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/20 13:46:43 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,14 +95,15 @@ size_t read_data_from_request(int sfd, int cmd, char *msg, int outfd)
 
 void write_progress(size_t sent, size_t total)
 {
+	float ratio;
 	float percent;
 	char buf[30];
 	int i;
 
-	percent = sent / total;
+	percent = sent / total * 100;
 	ft_memset(buf, '-', sizeof(buf));
 	i = 0;
-	while (i < percent * sizeof(buf))
+	while (i < percent * 30)
 	{
 		buf[i] = '=';
 		i++;
