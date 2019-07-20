@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   client.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jackson <jbeall@student.42.us.org>         +#+  +:+       +#+        */
+/*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:47:04 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/20 14:08:53 by jackson          ###   ########.fr       */
+/*   Updated: 2019/07/20 14:29:21 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,7 +70,7 @@ int connect_to_data_sock(int sfd)
 	return (dfd);
 }
 
-size_t read_data_from_request(int sfd, int cmd, char *msg, int outfd)
+size_t read_data_from_request(int sfd, int cmd, char *msg, int outfd, size_t file_size)
 {
 	int dfd;
 	uint8_t buf[1000];
@@ -88,7 +88,11 @@ size_t read_data_from_request(int sfd, int cmd, char *msg, int outfd)
 	{
 		total += len;
 		write(outfd, buf, len);
+		if (file_size)
+			write_progress(total, file_size);
 	}
+	if (file_size)
+		clear_progress();
 	close(dfd);
 	return (total);
 }
@@ -148,13 +152,13 @@ size_t send_data_for_request(int sfd, int cmd, char *msg, int infd, size_t file_
 void handle_ls(int sfd, char **av)
 {
 	(void)av;
-	read_data_from_request(sfd, LIST, NULL, STDOUT_FILENO);
+	read_data_from_request(sfd, LIST, NULL, STDOUT_FILENO, 0);
 }
 
 void handle_pwd(int sfd, char **av)
 {
 	(void)av;
-	read_data_from_request(sfd, CWD, NULL, STDOUT_FILENO);
+	read_data_from_request(sfd, CWD, NULL, STDOUT_FILENO, 0);
 	write(1, "\n", 1);
 }
 
@@ -165,7 +169,7 @@ void handle_cd(int sfd, char **av)
 		printf("cd : need argument\n");
 		return;
 	}
-	read_data_from_request(sfd, CD, av[0], STDERR_FILENO);
+	read_data_from_request(sfd, CD, av[0], STDERR_FILENO, 0);
 }
 
 void handle_get(int sfd, char **av)
@@ -173,6 +177,7 @@ void handle_get(int sfd, char **av)
 	int newfd;
 	char buf[MAX_TN_LEN];
 	size_t total;
+	size_t file_size;
 
 	if (!av || !av[0] || !*av[0])
 		return;
@@ -195,18 +200,11 @@ void handle_get(int sfd, char **av)
 		return;
 	}
 	newfd = open(av[0], O_WRONLY | O_CREAT | O_TRUNC, 0666);
-	total = read_data_from_request(sfd, SFILE, av[0], newfd);
+	file_size = 0;
+	recv(sfd, &file_size, sizeof(file_size), 0);
+	total = read_data_from_request(sfd, SFILE, av[0], newfd, file_size);
 	printf("Received %zu bytes in file: %s\n", total, av[0]);
 	close (newfd);
-}
-
-size_t get_file_size(char *file)
-{
-	struct stat data;
-
-	if (stat(file, &data) == -1)
-		return (0);
-	return (data.st_size);
 }
 
 void handle_put(int sfd, char **av)

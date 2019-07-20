@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:53:48 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/20 13:37:19 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/20 14:28:53 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,5 +42,8 @@ char* g_cmd_str[] = {
 	"lcd",
 	"lpwd"
 };
+
+void write_progress(size_t sent, size_t total);
+void clear_progress(void);
 
 #endif

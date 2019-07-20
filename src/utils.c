@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 21:00:15 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/19 14:07:59 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/20 14:20:20 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,4 +66,13 @@ void send_bad(int sfd)
 	snprintf(out, MAX_TN_LEN, "%s", g_com_str[BAD]);
 	if (send(sfd, out, ft_strlen(g_com_str[BAD]), 0) <= 0)
 		err_exit("send");
+}
+
+size_t get_file_size(char *file)
+{
+	struct stat data;
+
+	if (stat(file, &data) == -1)
+		return (0);
+	return (data.st_size);
 }
