@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:47:04 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/19 20:19:54 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/19 20:49:16 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,7 @@ bool prompt(void)
 int connect_to_data_sock(int sfd)
 {
 	socklen_t addr_len;
-	struct sockaddr addr;
+	struct sockaddr_in addr;
 	int dfd;
 
 	ft_memset(&addr, 0, sizeof(addr));
@@ -58,7 +58,7 @@ int connect_to_data_sock(int sfd)
 	recv(sfd, &addr, addr_len, 0);
 	if((dfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 		err_exit("socket");
-	if (connect(dfd, &addr, addr_len) == -1)
+	if (connect(dfd, (struct sockaddr*)(&addr), addr_len) == -1)
 		err_exit("could not connect");
 	return (dfd);
 }
