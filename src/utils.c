@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 21:00:15 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/20 14:20:20 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/20 18:39:04 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,18 +28,19 @@ char *g_com_str[] = {
 	"TFILE"
 };
 
-void		err_exit(char *str)
+void	err_exit(char *str)
 {
 	perror(str);
 	exit(EXIT_FAILURE);
 }
 
-int send_code(int sfd, int code, char *msg)
+int		send_code(int sfd, int code, char *msg)
 {
 	char out[MAX_TN_LEN];
 	char buf[MAX_TN_LEN];
 
-	snprintf(out, MAX_TN_LEN, "%s%s%s\n", g_com_str[code], msg ? ":" : "", msg ? msg : "");
+	snprintf(out, MAX_TN_LEN, "%s%s%s\n", g_com_str[code],
+		msg ? ":" : "", msg ? msg : "");
 	if (send(sfd, out, ft_strlen(out), 0) <= 0)
 		err_exit("send");
 	ft_memset(buf, '\0', sizeof(buf));
@@ -50,7 +51,7 @@ int send_code(int sfd, int code, char *msg)
 	return (0);
 }
 
-void send_ack(int sfd)
+void	send_ack(int sfd)
 {
 	char out[MAX_TN_LEN];
 
@@ -59,7 +60,7 @@ void send_ack(int sfd)
 		err_exit("send");
 }
 
-void send_bad(int sfd)
+void	send_bad(int sfd)
 {
 	char out[MAX_TN_LEN];
 
@@ -68,7 +69,7 @@ void send_bad(int sfd)
 		err_exit("send");
 }
 
-size_t get_file_size(char *file)
+size_t	get_file_size(char *file)
 {
 	struct stat data;
 

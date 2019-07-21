@@ -6,7 +6,7 @@
 #    By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2019/03/03 12:06:08 by jbeall            #+#    #+#              #
-#    Updated: 2019/07/19 20:42:27 by jbeall           ###   ########.fr        #
+#    Updated: 2019/07/20 18:33:26 by jbeall           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -24,10 +24,18 @@ SUB = libft
 
 VPATH = src/server src/client src
 
-LIST1 = server
+LIST1 = server \
+server_util \
+connect_data \
+server_handler1 \
+server_handler2
+
 SRC1 = $(addsuffix .c, $(LIST1))
 
-LIST2 = client
+LIST2 = client \
+client_util \
+client_handler1 \
+client_handler2
 SRC2 = $(addsuffix .c, $(LIST2))
 
 LISTC = utils
