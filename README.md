@@ -1,6 +1,6 @@
 # ft_p
 This is a very simple and lightweight server and client for sending data across a network. 
-This project uses IPv4 and was developed as an excersize in socket programming. 
+This project uses IPv4 and was developed as an exersize in socket programming. 
 The server is multithreaded and simply spawns a new thread to handle each connection.
 The client initially connects a control socket, and subsequently negotiates a data socket to handle all requests.
 
