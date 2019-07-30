@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:51:32 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/20 17:50:18 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/30 10:33:10 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,10 @@
 
 # define NUM_CMD_CODE 5
 
+# define GREEN "\033[32m"
+# define RED "\033[31m"
+# define RESET "\033[m"
+
 extern char*	g_cmd_code[];
 
 typedef struct	s_thread_args
@@ -40,6 +44,12 @@ typedef struct	s_thread_args
 	int			afd;
 	char		env[1024];
 }				t_thread_args;
+
+typedef struct	s_rtsize
+{
+	ssize_t tx;
+	ssize_t rx;
+}				t_rtsize;
 
 char			*g_server_root;
 
@@ -69,7 +79,7 @@ int				is_valid_directory(char *cwd, char *path);
 void			handle_cd(int afd, char **av, char *cwd);
 void			handle_get(int afd, char **av, char *cwd);
 void			handle_put(int afd, char **av, char *cwd);
-void			send_file_to_client(char *cwd, char *path, int dfd);
+int				send_file_to_client(char *cwd, char *path, int dfd);
 void			rec_file_from_client(char *cwd, char *path, int dfd);
 size_t			get_file_size_from_filename(char *path, char *cwd);
 

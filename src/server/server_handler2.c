@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/20 16:43:01 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/20 17:47:51 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/30 10:35:47 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,11 +16,15 @@
 void	get_helper(int afd, char *path, char *cwd)
 {
 	int dfd;
+	int status;
 
 	dfd = establish_data_sock(afd);
-	send_file_to_client(cwd, path, dfd);
+	status = send_file_to_client(cwd, path, dfd);
 	close(dfd);
-	server_log("Succesfully sent file");
+	if (!status)
+		server_log(GREEN "Successfully sent file" RESET);
+	else
+		server_log(RED "File transfer unsuccessful!" RESET);
 }
 
 void	handle_get(int afd, char **av, char *cwd)
@@ -68,18 +72,18 @@ void	handle_put(int afd, char **av, char *cwd)
 	send_ack(afd);
 	dfd = establish_data_sock(afd);
 	rec_file_from_client(cwd, av[0], dfd);
-	server_log("Successfully received file");
+	server_log(GREEN "Successfully received file" RESET);
 	free_str_split(msg);
 	close(dfd);
 }
 
-void	send_file_to_client(char *cwd, char *path, int dfd)
+int		send_file_to_client(char *cwd, char *path, int dfd)
 {
-	uint8_t	buf[FILE_BUFF_SIZE];
-	char	namebuf[SERVER_BUFF_SIZE];
-	size_t	size;
-	size_t	total;
-	int		ffd;
+	uint8_t		buf[FILE_BUFF_SIZE];
+	char		namebuf[SERVER_BUFF_SIZE];
+	t_rtsize	size;
+	ssize_t		total;
+	int			ffd;
 
 	ft_strcpy(namebuf, g_server_root);
 	ft_strlcat(namebuf, cwd, SERVER_BUFF_SIZE);
@@ -88,11 +92,15 @@ void	send_file_to_client(char *cwd, char *path, int dfd)
 	ft_strlcat(namebuf, path, SERVER_BUFF_SIZE);
 	total = 0;
 	if ((ffd = open(namebuf, O_RDONLY)) == -1)
-		return ;
-	while ((size = read(ffd, buf, FILE_BUFF_SIZE)))
-		total += send(dfd, buf, size, 0);
+		return (-1);
+	while ((size.rx = read(ffd, buf, FILE_BUFF_SIZE)) > 0)
+	{
+		size.tx = send(dfd, buf, size.rx, 0);
+		total += size.tx;
+	}
 	printf("Sent %zu bytes in file: %s\n", total, path);
 	close(ffd);
+	return (size.tx < 0 ? -1 : 0);
 }
 
 void	rec_file_from_client(char *cwd, char *path, int dfd)

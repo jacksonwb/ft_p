@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/20 16:34:30 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/20 17:16:49 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/30 10:09:36 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,8 @@ int		init_server(char *port_str)
 
 	check_port(port_str);
 	printf("initializing server...\n");
+	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR)
+		err_exit("Signal");
 	if ((sfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 		err_exit("Socket Error");
 	ft_memset(&addr, 0, sizeof(addr));
