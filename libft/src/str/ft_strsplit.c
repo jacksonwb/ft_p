@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/10/26 13:14:44 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/16 14:52:33 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/29 19:51:09 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ static size_t	count_seg(char const *s, char c)
 	return (size);
 }
 
-void	free_str_split(char **str_arr)
+void			free_str_split(char **str_arr)
 {
 	int i;
 

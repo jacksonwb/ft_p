@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/20 17:56:01 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/20 18:34:46 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/29 20:17:41 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,13 +16,13 @@
 void	handle_ls(int sfd, char **av)
 {
 	(void)av;
-	read_data_from_request(sfd, LIST, NULL, STDOUT_FILENO, 0);
+	read_data_from_request(sfd, (t_client_cmd){LIST, NULL}, STDOUT_FILENO, 0);
 }
 
 void	handle_pwd(int sfd, char **av)
 {
 	(void)av;
-	read_data_from_request(sfd, CWD, NULL, STDOUT_FILENO, 0);
+	read_data_from_request(sfd, (t_client_cmd){CWD, NULL}, STDOUT_FILENO, 0);
 	write(1, "\n", 1);
 }
 
@@ -33,7 +33,7 @@ void	handle_cd(int sfd, char **av)
 		printf("cd : need argument\n");
 		return ;
 	}
-	read_data_from_request(sfd, CD, av[0], STDERR_FILENO, 0);
+	read_data_from_request(sfd, (t_client_cmd){CD, av[0]}, STDERR_FILENO, 0);
 }
 
 void	handle_get(int sfd, char **av)
@@ -60,7 +60,7 @@ void	handle_get(int sfd, char **av)
 	file_size = 0;
 	if (recv(sfd, &file_size, sizeof(file_size), 0) == 0)
 		die("Error: socket was closed");
-	total = read_data_from_request(sfd, SFILE, av[0], newfd, file_size);
+	total = read_data_from_request(sfd, (TCC){SFILE, av[0]}, newfd, file_size);
 	printf("Received %zu bytes in file: %s\n", total, av[0]);
 	close(newfd);
 }

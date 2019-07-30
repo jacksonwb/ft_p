@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/20 17:57:01 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/20 18:35:05 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/29 20:17:49 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,8 @@ void	handle_put(int sfd, char **av)
 	}
 	total = 0;
 	file_size = get_file_size(av[0]);
-	total = send_data_for_request(sfd, TFILE, av[0], filefd, file_size);
+	total = send_data_for_request(sfd, (t_client_cmd){TFILE, av[0]},
+		filefd, file_size);
 	printf("Sent %zu bytes in file: %s\n", total, av[0]);
 	close(filefd);
 }

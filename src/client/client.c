@@ -6,7 +6,7 @@
 /*   By: jbeall <jbeall@student.42.us.org>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2019/07/15 16:47:04 by jbeall            #+#    #+#             */
-/*   Updated: 2019/07/20 18:40:02 by jbeall           ###   ########.fr       */
+/*   Updated: 2019/07/29 20:16:31 by jbeall           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,18 @@ char *g_cmd_str[] = {
 	"lpwd"
 };
 
+static void	(*g_jump[])(int, char **) = {
+	&handle_ls,
+	&handle_cd,
+	&handle_get,
+	&handle_put,
+	&handle_pwd,
+	&handle_quit,
+	&handle_lls,
+	&handle_lcd,
+	&handle_lpwd
+};
+
 int		connect_to_data_sock(int sfd)
 {
 	socklen_t			addr_len;
@@ -56,14 +68,15 @@ int		connect_to_data_sock(int sfd)
 	return (dfd);
 }
 
-size_t	read_data_from_request(int sfd, int cmd, char *msg, int outfd, size_t file_size)
+size_t	read_data_from_request(int sfd, t_client_cmd cmd, int outfd,
+	size_t file_size)
 {
 	int		dfd;
 	uint8_t	buf[1000];
 	size_t	len;
 	size_t	total;
 
-	if (send_code(sfd, cmd, msg) == -1)
+	if (send_code(sfd, cmd.cmd, cmd.msg) == -1)
 	{
 		printf("Error: expected ACK\n");
 		return (0);
@@ -83,14 +96,15 @@ size_t	read_data_from_request(int sfd, int cmd, char *msg, int outfd, size_t fil
 	return (total);
 }
 
-size_t	send_data_for_request(int sfd, int cmd, char *msg, int infd, size_t file_size)
+size_t	send_data_for_request(int sfd, t_client_cmd cmd, int infd,
+	size_t file_size)
 {
 	int		dfd;
 	uint8_t	buf[1000];
 	size_t	len;
 	size_t	total;
 
-	if (send_code(sfd, cmd, msg) == -1)
+	if (send_code(sfd, cmd.cmd, cmd.msg) == -1)
 	{
 		printf("Error: expected ACK\n");
 		return (0);
@@ -113,17 +127,6 @@ void	handle_cmd(int sfd, char *str)
 {
 	char		**cmd;
 	int			i;
-	static void	(*jump[])(int, char **) = {
-		&handle_ls,
-		&handle_cd,
-		&handle_get,
-		&handle_put,
-		&handle_pwd,
-		&handle_quit,
-		&handle_lls,
-		&handle_lcd,
-		&handle_lpwd
-	};
 
 	i = 0;
 	cmd = ft_strsplit(str, ' ');
@@ -131,7 +134,7 @@ void	handle_cmd(int sfd, char *str)
 	{
 		if (!ft_strcmp(cmd[0], g_cmd_str[i]))
 		{
-			jump[i](sfd, cmd + 1);
+			g_jump[i](sfd, cmd + 1);
 			break ;
 		}
 		i++;
